@@ -36,6 +36,7 @@ async def play_hndlr(
     url: str = None,
 ) -> None:
     sent = await m.reply_text(m.lang["play_searching"])
+    emj = await m.reply_text("<tg-emoji emoji-id='5406745015365943482'>⬇️</tg-emoji>")
     file = None
     mention = m.from_user.mention
     media = tg.get_media(m.reply_to_message) if m.reply_to_message else None
@@ -56,6 +57,7 @@ async def play_hndlr(
             )
 
             if not tracks:
+                await emj.delete()
                 return await sent.edit_text(m.lang["playlist_error"])
 
             file = tracks[0]
@@ -65,6 +67,7 @@ async def play_hndlr(
             file = await yt.search(url, sent.id, video=video)
 
         if not file:
+            await emj.delete()
             return await sent.edit_text(
                 m.lang["play_not_found"].format(config.SUPPORT_CHAT)
             )
@@ -73,14 +76,17 @@ async def play_hndlr(
         query = " ".join(m.command[1:])
         file = await yt.search(query, sent.id, video=video)
         if not file:
+            await emj.delete()
             return await sent.edit_text(
                 m.lang["play_not_found"].format(config.SUPPORT_CHAT)
             )
 
     if not file:
+        await emj.delete()
         return await sent.edit_text(m.lang["play_usage"])
 
     if file.duration_sec > config.DURATION_LIMIT:
+        await emj.delete()
         return await sent.edit_text(
             m.lang["play_duration_limit"].format(config.DURATION_LIMIT // 60)
         )
@@ -95,6 +101,7 @@ async def play_hndlr(
         position = queue.add(m.chat.id, file)
 
         if position != 0 or await db.get_call(m.chat.id):
+            await emj.delete()
             await sent.edit_text(
                 m.lang["play_queued"].format(
                     position,
@@ -120,9 +127,11 @@ async def play_hndlr(
         if Path(fname).exists():
             file.file_path = fname
         else:
+            await emj.edit_text("<tg-emoji emoji-id='5406745015365943482'>⌛</tg-emoji>")
             await sent.edit_text(m.lang["play_downloading"])
             file.file_path = await yt.download(file.id, video=video)
 
+    await emj.delete()
     await anon.play_media(chat_id=m.chat.id, message=sent, media=file)
     if not tracks:
         return
