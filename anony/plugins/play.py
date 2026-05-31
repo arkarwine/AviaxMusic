@@ -35,8 +35,8 @@ async def play_hndlr(
     video: bool = False,
     url: str = None,
 ) -> None:
-    sent = await m.reply_text(m.lang["play_searching"])
     emj = await m.reply_text("<tg-emoji emoji-id='5406745015365943482'>⬇️</tg-emoji>")
+    sent = await m.reply_text(m.lang["play_searching"])
     file = None
     mention = m.from_user.mention
     media = tg.get_media(m.reply_to_message) if m.reply_to_message else None
@@ -132,6 +132,7 @@ async def play_hndlr(
             file.file_path = await yt.download(file.id, video=video)
 
 
+    await emj.edit_text("<tg-emoji emoji-id='5341498088408234504'>💯</tg-emoji>")
     await anon.play_media(chat_id=m.chat.id, message=sent, media=file)
     if not tracks:
         return
@@ -140,4 +141,3 @@ async def play_hndlr(
         chat_id=m.chat.id,
         text=m.lang["playlist_queued"].format(len(tracks)) + added,
     )
-    await emj.edit_text("<tg-emoji emoji-id='5341498088408234504'>💯</tg-emoji>")
