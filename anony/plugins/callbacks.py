@@ -209,7 +209,7 @@ async def _bot_settings_cb(_, query: types.CallbackQuery):
         pending_settings[query.from_user.id] = {
             "key": key,
             "chat_id": query.message.chat.id,
-            "message_id": query.message.message_id,
+            "message_id": query.message.id,
         }
         await query.answer(
             f"Send the new value for {key} in reply to the prompt.",
