@@ -132,6 +132,104 @@ class Inline:
             ]
         )
 
+    def bot_settings_text(self, cfg) -> str:
+        def fmt(val, boolean: bool = False) -> str:
+            if boolean:
+                return "ON" if val else "OFF"
+            return str(val)
+
+        return (
+            "<b>Bot Configuration</b>\n"
+            f"AUTO_LEAVE: {fmt(cfg.AUTO_LEAVE, True)}\n"
+            f"AUTO_END: {fmt(cfg.AUTO_END, True)}\n"
+            f"THUMB_GEN: {fmt(cfg.THUMB_GEN, True)}\n"
+            f"VIDEO_PLAY: {fmt(cfg.VIDEO_PLAY, True)}\n"
+            f"LANG_CODE: {fmt(cfg.LANG_CODE)}\n"
+            f"DURATION_LIMIT: {fmt(cfg.DURATION_LIMIT // 60)} min\n"
+            f"QUEUE_LIMIT: {fmt(cfg.QUEUE_LIMIT)}\n"
+            f"PLAYLIST_LIMIT: {fmt(cfg.PLAYLIST_LIMIT)}\n"
+            f"SUPPORT_CHANNEL: {fmt(cfg.SUPPORT_CHANNEL)}\n"
+            f"SUPPORT_CHAT: {fmt(cfg.SUPPORT_CHAT)}\n"
+            f"DEFAULT_THUMB: {fmt(cfg.DEFAULT_THUMB)}\n"
+            f"PING_IMG: {fmt(cfg.PING_IMG)}\n"
+            f"START_IMG: {fmt(cfg.START_IMG)}"
+        )
+
+    def bot_settings_markup(self, cfg) -> types.InlineKeyboardMarkup:
+        return self.ikm(
+            [
+                [
+                    self.ikb(
+                        text=f"AUTO_LEAVE: {'ON' if cfg.AUTO_LEAVE else 'OFF'}",
+                        callback_data="botsettings toggle AUTO_LEAVE",
+                    ),
+                    self.ikb(
+                        text=f"AUTO_END: {'ON' if cfg.AUTO_END else 'OFF'}",
+                        callback_data="botsettings toggle AUTO_END",
+                    ),
+                ],
+                [
+                    self.ikb(
+                        text=f"THUMB_GEN: {'ON' if cfg.THUMB_GEN else 'OFF'}",
+                        callback_data="botsettings toggle THUMB_GEN",
+                    ),
+                    self.ikb(
+                        text=f"VIDEO_PLAY: {'ON' if cfg.VIDEO_PLAY else 'OFF'}",
+                        callback_data="botsettings toggle VIDEO_PLAY",
+                    ),
+                ],
+                [
+                    self.ikb(
+                        text=f"LANG: {cfg.LANG_CODE}",
+                        callback_data="botsettings edit LANG_CODE",
+                    ),
+                    self.ikb(
+                        text=f"DUR: {cfg.DURATION_LIMIT // 60}m",
+                        callback_data="botsettings edit DURATION_LIMIT",
+                    ),
+                ],
+                [
+                    self.ikb(
+                        text=f"QUEUE: {cfg.QUEUE_LIMIT}",
+                        callback_data="botsettings edit QUEUE_LIMIT",
+                    ),
+                    self.ikb(
+                        text=f"PLAYLIST: {cfg.PLAYLIST_LIMIT}",
+                        callback_data="botsettings edit PLAYLIST_LIMIT",
+                    ),
+                ],
+                [
+                    self.ikb(
+                        text="SUPPORT CHANNEL",
+                        callback_data="botsettings edit SUPPORT_CHANNEL",
+                    ),
+                    self.ikb(
+                        text="SUPPORT CHAT",
+                        callback_data="botsettings edit SUPPORT_CHAT",
+                    ),
+                ],
+                [
+                    self.ikb(
+                        text="DEFAULT THUMB",
+                        callback_data="botsettings edit DEFAULT_THUMB",
+                    ),
+                    self.ikb(
+                        text="PING IMG",
+                        callback_data="botsettings edit PING_IMG",
+                    ),
+                ],
+                [
+                    self.ikb(
+                        text="START IMG",
+                        callback_data="botsettings edit START_IMG",
+                    )
+                ],
+                [
+                    self.ikb(text="Close", callback_data="botsettings close"),
+                ],
+            ]
+        )
+
     def start_key(
         self, lang: dict, private: bool = False
     ) -> types.InlineKeyboardMarkup:

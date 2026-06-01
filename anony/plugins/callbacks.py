@@ -7,8 +7,10 @@ import re
 
 from pyrogram import errors, filters, types
 
-from anony import anon, app, db, lang, queue, tg, yt
+from anony import anon, app, config, db, lang, queue, tg, yt
 from anony.helpers import admin_check, buttons, can_manage_vc
+
+pending_settings: dict[int, dict[str, int]] = {}
 
 
 @app.on_callback_query(filters.regex("cancel_dl") & ~app.bl_users)
@@ -176,3 +178,107 @@ async def _settings_cb(_, query: types.CallbackQuery):
             chat_id,
         )
     )
+
+
+@app.on_callback_query(filters.regex(r"^botsettings") & ~app.bl_users)
+@lang.language()
+@admin_check
+async def _bot_settings_cb(_, query: types.CallbackQuery):
+    cmd = query.data.split()
+    if len(cmd) == 1:
+        return await query.answer()
+
+    action = cmd[1]
+    if action == "toggle":
+        key = cmd[2]
+        current = getattr(config, key, None)
+        if current is None or not isinstance(current, bool):
+            return await query.answer("Invalid setting.", show_alert=True)
+
+        value = not current
+        await db.set_setting(key, value)
+        config.apply_settings({key: value})
+        await query.answer(f"{key} set to {'ON' if value else 'OFF'}.", show_alert=True)
+        return await query.edit_message_text(
+            text=buttons.bot_settings_text(config),
+            reply_markup=buttons.bot_settings_markup(config),
+        )
+
+    if action == "edit":
+        key = cmd[2]
+        pending_settings[query.from_user.id] = {
+            "key": key,
+            "chat_id": query.message.chat.id,
+            "message_id": query.message.message_id,
+        }
+        await query.answer(
+            f"Send the new value for {key} in reply to the prompt.",
+            show_alert=True,
+        )
+        return await query.message.reply_text(
+            f"Send the new value for <b>{key}</b> and reply to this message.\n\n"
+            f"Current value: {getattr(config, key, 'None')}",
+            reply_markup=types.ForceReply(selective=True),
+        )
+
+    if action == "close":
+        await query.answer()
+        return await query.message.delete()
+
+    await query.answer()
+
+
+@app.on_message(filters.private & filters.reply & ~app.bl_users)
+@lang.language()
+@admin_check
+async def _bot_settings_value(_, message: types.Message):
+    pending = pending_settings.pop(message.from_user.id, None)
+    if not pending:
+        return
+
+    if not message.reply_to_message or message.reply_to_message.from_user.id != app.id:
+        return
+
+    key = pending["key"]
+    raw = message.text or ""
+    if not raw.strip():
+        return await message.reply_text("Please send a valid value.")
+
+    try:
+        if key in {"AUTO_LEAVE", "AUTO_END", "THUMB_GEN", "VIDEO_PLAY"}:
+            value = raw.lower() in {"true", "1", "yes", "on"}
+        elif key == "LANG_CODE":
+            raw = raw.lower()
+            if raw not in lang.get_languages():
+                return await message.reply_text(
+                    "Invalid language code. Use a supported code like en, fr, de, etc."
+                )
+            value = raw
+        elif key == "DURATION_LIMIT":
+            value = int(raw)
+            if value <= 0:
+                raise ValueError
+        elif key in {"QUEUE_LIMIT", "PLAYLIST_LIMIT"}:
+            value = int(raw)
+            if value <= 0:
+                raise ValueError
+        else:
+            value = raw
+    except ValueError:
+        return await message.reply_text(
+            "Invalid value. Please send a positive integer for this setting."
+        )
+
+    await db.set_setting(key, value)
+    config.apply_settings({key: value})
+
+    await message.reply_text(f"{key} updated to {value}.")
+    try:
+        await app.edit_message_text(
+            chat_id=pending["chat_id"],
+            message_id=pending["message_id"],
+            text=buttons.bot_settings_text(config),
+            reply_markup=buttons.bot_settings_markup(config),
+        )
+    except Exception:
+        pass

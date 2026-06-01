@@ -45,6 +45,29 @@ class Config:
         self.PING_IMG = getenv("PING_IMG", "https://files.catbox.moe/haagg2.png")
         self.START_IMG = getenv("START_IMG", "https://files.catbox.moe/zvziwk.jpg")
 
+    def apply_settings(self, settings: dict) -> None:
+        bool_keys = {"AUTO_LEAVE", "AUTO_END", "THUMB_GEN", "VIDEO_PLAY"}
+        int_keys = {"QUEUE_LIMIT", "PLAYLIST_LIMIT"}
+
+        for key, value in settings.items():
+            if not hasattr(self, key):
+                continue
+
+            if key == "DURATION_LIMIT":
+                if value is None:
+                    continue
+                self.DURATION_LIMIT = int(value) * 60
+            elif key in bool_keys:
+                if isinstance(value, str):
+                    value = value.lower() in ("true", "1", "yes", "on")
+                self.__dict__[key] = bool(value)
+            elif key in int_keys:
+                if value is None:
+                    continue
+                self.__dict__[key] = int(value)
+            else:
+                self.__dict__[key] = value
+
     def check(self):
         missing = [
             var

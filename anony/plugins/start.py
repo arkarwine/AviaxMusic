@@ -70,6 +70,16 @@ async def settings(_, message: types.Message):
     )
 
 
+@app.on_message(filters.command(["settings"]) & filters.private & app.sudoers & ~app.bl_users)
+@lang.language()
+async def bot_settings(_, message: types.Message):
+    await message.reply_text(
+        text=buttons.bot_settings_text(config),
+        reply_markup=buttons.bot_settings_markup(config),
+        quote=True,
+    )
+
+
 @app.on_message(filters.new_chat_members, group=7)
 @lang.language()
 async def _new_member(_, message: types.Message):

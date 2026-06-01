@@ -41,6 +41,8 @@ class MongoDB:
         self.lang = {}
         self.langdb = self.db.lang
 
+        self.settings = {}
+
         self.users = []
         self.usersdb = self.db.users
 
@@ -230,6 +232,20 @@ class MongoDB:
             self.lang[chat_id] = doc["lang"] if doc else config.LANG_CODE
         return self.lang[chat_id]
 
+    async def get_settings(self) -> dict:
+        if not self.settings:
+            doc = await self.cache.find_one({"_id": "settings"}) or {}
+            self.settings = {k: v for k, v in doc.items() if k != "_id"}
+        return self.settings
+
+    async def set_setting(self, key: str, value) -> None:
+        self.settings[key] = value
+        await self.cache.update_one(
+            {"_id": "settings"},
+            {"$set": {key: value}},
+            upsert=True,
+        )
+
     # LOGGER METHODS
     async def is_logger(self) -> bool:
         return self.logger
@@ -355,4 +371,5 @@ class MongoDB:
         await self.get_users()
         await self.get_blacklisted(True)
         await self.get_logger()
+        await self.get_settings()
         logger.info("Database cache loaded.")

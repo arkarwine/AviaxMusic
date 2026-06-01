@@ -24,6 +24,7 @@ async def idle():
 
 async def main():
     await db.connect()
+    config.apply_settings(await db.get_settings())
     await app.boot()
     await userbot.boot()
     await anon.boot()
