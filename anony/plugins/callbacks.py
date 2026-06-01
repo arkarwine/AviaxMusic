@@ -149,7 +149,7 @@ async def _help(_, query: types.CallbackQuery):
     )
 
 
-@app.on_callback_query(filters.regex("settings") & filters.group & ~app.bl_users)
+@app.on_callback_query(filters.regex(r"^settings") & ~app.bl_users)
 @lang.language()
 @admin_check
 async def _settings_cb(_, query: types.CallbackQuery):
@@ -180,7 +180,7 @@ async def _settings_cb(_, query: types.CallbackQuery):
     )
 
 
-@app.on_callback_query(filters.regex(r"^botsettings") & filters.private & ~app.bl_users)
+@app.on_callback_query(filters.regex(r"^botsettings") & ~app.bl_users)
 @lang.language()
 @admin_check
 async def _bot_settings_cb(_, query: types.CallbackQuery):
