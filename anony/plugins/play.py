@@ -58,7 +58,7 @@ async def play_hndlr(
 
             if not tracks:
                 await sent.edit_text(m.lang["playlist_error"])
-                return await emj.edit_text("<tg-emoji emoji-id='5420323339723881652'>⚠️</tg-emoji>")
+                return await emj.delete()
 
             file = tracks[0]
             tracks.remove(file)
@@ -70,7 +70,7 @@ async def play_hndlr(
             await sent.edit_text(
                 m.lang["play_not_found"].format(config.SUPPORT_CHAT)
             )
-            return await emj.edit_text("<tg-emoji emoji-id='5420323339723881652'>⚠️</tg-emoji>")
+            return await emj.delete()
 
     elif len(m.command) >= 2:
         query = " ".join(m.command[1:])
@@ -79,17 +79,17 @@ async def play_hndlr(
             await sent.edit_text(
                 m.lang["play_not_found"].format(config.SUPPORT_CHAT)
             )
-            return await emj.edit_text("<tg-emoji emoji-id='5420323339723881652'>⚠️</tg-emoji>")
+            return await emj.delete()
 
     if not file:
         await sent.edit_text(m.lang["play_usage"])
-        return await emj.edit_text("<tg-emoji emoji-id='5314504236132747481'>⁉️</tg-emoji>")
+        return await emj.delete()
 
     if file.duration_sec > config.DURATION_LIMIT:
         await sent.edit_text(
             m.lang["play_duration_limit"].format(config.DURATION_LIMIT // 60)
         )
-        return await emj.edit_text("<tg-emoji emoji-id='5420323339723881652'>⚠️</tg-emoji>")
+        return await emj.delete()
 
     if await db.is_logger():
         await utils.play_log(m, sent.link, file.title, file.duration)
@@ -119,7 +119,7 @@ async def play_hndlr(
                     chat_id=m.chat.id,
                     text=m.lang["playlist_queued"].format(len(tracks)) + added,
                 )
-            await emj.edit_text("<tg-emoji emoji-id='5440621591387980068'>🔜</tg-emoji>")
+            await emj.delete()
             return
 
     if not file.file_path:
@@ -132,7 +132,7 @@ async def play_hndlr(
             file.file_path = await yt.download(file.id, video=video)
 
 
-    await emj.edit_text("<tg-emoji emoji-id='5341498088408234504'>💯</tg-emoji>")
+    await emj.delete()
     await anon.play_media(chat_id=m.chat.id, message=sent, media=file)
     if not tracks:
         return
